@@ -12,7 +12,13 @@ orbs:
 jobs:
   # build step
   build:
+    docker:
+      - image: mukeshrijhwani/mvn-plus-npm
+
     steps:
+      - slack/notify:
+          message: need to use own docker image eventually...
+
       - checkout
 
       - run:
@@ -28,7 +34,13 @@ jobs:
 
   # promote step
   promote:
+    docker:
+      - image: mukeshrijhwani/mvn-plus-npm
+
     steps:
+      - slack/notify:
+          message: need to use own docker image eventually...
+
       - checkout
 
       - slack/notify:
