@@ -1,0 +1,82 @@
+# Java Maven CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
+version: 2.1
+
+# orbs
+orbs:
+  slack: circleci/slack@2.0.0
+
+# jobs
+jobs:
+  # build step
+  build:
+    working_directory: ~/repo
+
+    environment:
+      # customise JVM maximum heap limit
+      MAVEN_OPTS: -Xmx3200m
+
+    steps:
+      - checkout
+
+      - run:
+          name: “pull submodules”
+          command: |
+            git submodule init
+            git submodule update --remote
+
+      # download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum “pom.xml” }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum “pom.xml” }}
+
+      # run tests! skipping tests, ftm...
+      - slack/notify:
+          message: hello there...$TEST_VAR
+
+      - slack/status
+
+  # promote step
+  promote:
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      - slack/notify:
+          message: hello there again...$TEST_VAR
+
+      - slack/status
+
+# workflow; only way to apply context
+workflows:
+  build-and-promote:
+    jobs:
+      - build:
+          context: test-context
+
+      - hold-for-approval:
+          type: approval
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+
+      - promote:
+          requires:
+            - hold-for-approval
+          filters:
+            branches:
+              only: master
+          context: test-context
+          
