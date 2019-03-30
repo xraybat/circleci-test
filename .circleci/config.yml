@@ -14,7 +14,7 @@ jobs:
   build:
     docker:
       #- image: mukeshrijhwani/mvn-plus-npm
-      - image: mlgen100/mvn-plus-npm
+      - image: xraybat/mvn-plus-npm
 
     steps:
       - slack/notify:
@@ -37,7 +37,7 @@ jobs:
   promote:
     docker:
       #- image: mukeshrijhwani/mvn-plus-npm
-      - image: mlgen100/mvn-plus-npm
+      - image: xraybat/mvn-plus-npm
 
     steps:
       - slack/notify:
