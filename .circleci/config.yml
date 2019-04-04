@@ -24,21 +24,62 @@ jobs:
             git submodule init
             git submodule update --remote
 
+      - run: 
+          name: set environment variables
+          command: |
+            echo 'export CIRCLECI_STAGE=build' >> $BASH_ENV
+            echo 'export DEV_APP_ENVIRON=Dev' >> $BASH_ENV
+            echo 'export DEV_APP_SUFFIX=-dev' >> $BASH_ENV
+            echo 'export APP_ENVIRON=$DEV_APP_ENVIRON' >> $BASH_ENV
+            echo 'export APP_SUFFIX=$DEV_APP_SUFFIX' >> $BASH_ENV
+
       - slack/notify:
-          message: hello there...$TEST_VAR
+          message: $CIRCLECI_STAGE, hello there...$TEST_VAR...in...environment $APP_ENVIRON with suffix $APP_SUFFIX
 
       - slack/status
 
+
   # promote step
-  promote:
+  promote-to-test:
     docker:
       - image: xraybat/mvn-plus-npm
 
     steps:
       - checkout
 
+      - run:
+          name: set environment variables
+          command: |
+            echo 'export CIRCLECI_STAGE=promote' >> $BASH_ENV
+            echo 'export TEST_APP_ENVIRON=Test' >> $BASH_ENV
+            echo 'export TEST_APP_SUFFIX=-test' >> $BASH_ENV
+            echo 'export APP_ENVIRON=$TEST_APP_ENVIRON' >> $BASH_ENV
+            echo 'export APP_SUFFIX=$TEST_APP_SUFFIX' >> $BASH_ENV
+
       - slack/notify:
-          message: hello there again...$TEST_VAR
+          message: $CIRCLECI_STAGE, hello there...$TEST_VAR...in...environment $APP_ENVIRON with suffix $APP_SUFFIX
+
+      - slack/status
+
+  # promote step
+  promote-to-prod:
+    docker:
+      - image: xraybat/mvn-plus-npm
+
+    steps:
+      - checkout
+
+      - run:
+          name: set environment variables
+          command: |
+            echo 'export CIRCLECI_STAGE=promote' >> $BASH_ENV
+            echo 'export PROD_APP_ENVIRON=Prod' >> $BASH_ENV
+            echo 'export PROD_APP_SUFFIX=' >> $BASH_ENV
+            echo 'export APP_ENVIRON=$PROD_APP_ENVIRON' >> $BASH_ENV
+            echo 'export APP_SUFFIX=$PROD_APP_SUFFIX' >> $BASH_ENV
+
+      - slack/notify:
+          message: $CIRCLECI_STAGE, hello there...$TEST_VAR...in...environment $APP_ENVIRON with suffix $APP_SUFFIX
 
       - slack/status
 
@@ -49,15 +90,23 @@ workflows:
       - build:
           context: test-context
 
+      - promote-to-test:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /^promote*/
+          context: test-context
+
       - hold-for-approval:
           type: approval
           requires:
-            - build
+            - promote-to-test
           filters:
             branches:
               only: master
 
-      - promote:
+      - promote-to-prod:
           requires:
             - hold-for-approval
           filters:
