@@ -96,7 +96,7 @@ jobs:
 
 # workflow; only way to apply context
 workflows:
-  build-and-promote:
+  build-with-optional-promote:
     jobs:
       - build-only:
           filters:
