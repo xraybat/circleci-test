@@ -102,7 +102,7 @@ workflows:
           filters:
             branches:
               #only: ^(?!development|test|master)([a-z0-9]+)$
-              ignore: ^(?!development|test|master)([a-z0-9]+)$
+              ignore: ^(?=development|test|master)([a-z0-9]+)$
 
       - build-and-promote:
           filters:
