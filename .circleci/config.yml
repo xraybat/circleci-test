@@ -21,10 +21,10 @@ jobs:
       - run: 
           name: set environment variables
           command: |
-            echo 'export CIRCLECI_STAGE=build-only' >> $BASH_ENV
+            echo 'export BUILD_STAGE=build-only' >> $BASH_ENV
 
       - slack/notify:
-          message: $CIRCLECI_STAGE, build only in circle-ci
+          message: $BUILD_STAGE, build only in circle-ci
 
       - slack/status
 
@@ -39,10 +39,10 @@ jobs:
       - run: 
           name: set environment variables
           command: |
-            echo 'export CIRCLECI_STAGE=build' >> $BASH_ENV
+            echo 'export BUILD_STAGE=build' >> $BASH_ENV
 
       - slack/notify:
-          message: $CIRCLECI_STAGE, build in circle-ci then promote
+          message: $BUILD_STAGE on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), build in circle-ci then promote
 
       - slack/status
 
@@ -55,10 +55,10 @@ jobs:
       - run:
           name: set environment variables
           command: |
-            echo 'export CIRCLECI_STAGE=promote-to-development' >> $BASH_ENV
+            echo 'export BUILD_STAGE=promote-to-development' >> $BASH_ENV
 
       - slack/notify:
-          message: $CIRCLECI_STAGE, $PROD_VAR in environment $APP_ENVIRON with app suffix '$APP_SUFFIX'
+          message: $BUILD_STAGE on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), $PROD_VAR in environment $APP_ENVIRON with app suffix '$APP_SUFFIX'
 
       - slack/status
 
@@ -71,10 +71,10 @@ jobs:
       - run:
           name: set environment variables
           command: |
-            echo 'export CIRCLECI_STAGE=promote-to-test' >> $BASH_ENV
+            echo 'export BUILD_STAGE=promote-to-test' >> $BASH_ENV
 
       - slack/notify:
-          message: $CIRCLECI_STAGE, $PROD_VAR in environment $APP_ENVIRON with app suffix '$APP_SUFFIX'
+          message: $BUILD_STAGE, $PROD_VAR in environment $APP_ENVIRON with app suffix '$APP_SUFFIX'
 
       - slack/status
 
@@ -87,10 +87,10 @@ jobs:
       - run:
           name: set environment variables
           command: |
-            echo 'export CIRCLECI_STAGE=promote-to-production' >> $BASH_ENV
+            echo 'export BUILD_STAGE=promote-to-production' >> $BASH_ENV
 
       - slack/notify:
-          message: $CIRCLECI_STAGE, $PROD_VAR in environment $APP_ENVIRON with app suffix '$APP_SUFFIX'
+          message: $BUILD_STAGE, $PROD_VAR in environment $APP_ENVIRON with app suffix '$APP_SUFFIX'
 
       - slack/status
 
