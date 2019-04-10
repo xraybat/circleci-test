@@ -24,7 +24,7 @@ jobs:
             echo 'export BUILD_STAGE=build-only' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), build only in circle-ci
+          message: $BUILD_STAGE on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), build only in circle-ci environment $APP_ENVIRON (suffix '$APP_SUFFIX')
 
       - slack/status
 
@@ -42,7 +42,7 @@ jobs:
             echo 'export BUILD_STAGE=build' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), build in circle-ci then promote
+          message: $BUILD_STAGE on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), build in circle-ci then promote to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
 
       - slack/status
 
@@ -58,7 +58,7 @@ jobs:
             echo 'export BUILD_STAGE=promote-to-development' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE, $DEV_VAR in environment $APP_ENVIRON with app suffix '$APP_SUFFIX'
+          message: $BUILD_STAGE, $DEV_VAR in environment $APP_ENVIRON (suffix '$APP_SUFFIX')
 
       - slack/status
 
@@ -74,7 +74,7 @@ jobs:
             echo 'export BUILD_STAGE=promote-to-test' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE, $TEST_VAR in environment $APP_ENVIRON with app suffix '$APP_SUFFIX'
+          message: $BUILD_STAGE, $TEST_VAR in environment $APP_ENVIRON (suffix '$APP_SUFFIX')
 
       - slack/status
 
@@ -90,7 +90,7 @@ jobs:
             echo 'export BUILD_STAGE=promote-to-production' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE, $PROD_VAR in environment $APP_ENVIRON with app suffix '$APP_SUFFIX'
+          message: $BUILD_STAGE, $PROD_VAR in environment $APP_ENVIRON (suffix '$APP_SUFFIX')
 
       - slack/status
 
@@ -107,6 +107,7 @@ workflows:
                 - development
                 - test
                 - master
+          context: build-only.context
 
       - build-and-promote:
           filters:
@@ -116,6 +117,7 @@ workflows:
                 - development
                 - test
                 - master
+          #context: (inherited)
 
       - promote-to-development:
           requires:
