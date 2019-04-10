@@ -24,7 +24,7 @@ jobs:
             echo 'export BUILD_STAGE=build-only' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), build only in circle-ci environment $APP_ENVIRON (suffix '$APP_SUFFIX')
+          message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), building only for environment $APP_ENVIRON (suffix '$APP_SUFFIX')
 
       - slack/status
 
@@ -42,7 +42,8 @@ jobs:
             echo 'export BUILD_STAGE=build-and-promote' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), build in circle-ci then promote to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
+          message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), building then promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
+            # doesn't work, doesn't get context env vars from promote steps
 
       - slack/status
 
@@ -58,7 +59,13 @@ jobs:
             echo 'export BUILD_STAGE=promote-to-development' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE, $DEV_VAR in environment $APP_ENVIRON (suffix '$APP_SUFFIX')
+          message: $BUILD_STAGE, var is $DEV_VAR
+
+      - slack/notify:
+          message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM) for $APP_ENVIRON (suffix '$APP_SUFFIX')
+
+      - slack/notify:
+          message: $BUILD_STAGE, promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
 
       - slack/status
 
@@ -74,7 +81,13 @@ jobs:
             echo 'export BUILD_STAGE=promote-to-test' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE, $TEST_VAR in environment $APP_ENVIRON (suffix '$APP_SUFFIX')
+          message: $BUILD_STAGE, var is $TEST_VAR
+
+      - slack/notify:
+          message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM) for $APP_ENVIRON (suffix '$APP_SUFFIX')
+
+      - slack/notify:
+          message: $BUILD_STAGE, promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
 
       - slack/status
 
@@ -90,7 +103,13 @@ jobs:
             echo 'export BUILD_STAGE=promote-to-production' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE, $PROD_VAR in environment $APP_ENVIRON (suffix '$APP_SUFFIX')
+          message: $BUILD_STAGE, var is $PROD_VAR
+
+      - slack/notify:
+          message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM) for $APP_ENVIRON (suffix '$APP_SUFFIX')
+
+      - slack/notify:
+          message: $BUILD_STAGE, promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
 
       - slack/status
 
@@ -109,27 +128,27 @@ workflows:
                 - master
           context: build-only.context
 
-      - build-and-promote:
-          filters:
-            branches:
-              #only: ^(?=development|test|master)([a-z0-9]+)$
-              only:
-                - development
-                - test
-                - master
-          #context: (inherited)
+      #- build-and-promote:
+      #    filters:
+      #      branches:
+      #        #only: ^(?=development|test|master)([a-z0-9]+)$
+      #        only:
+      #          - development
+      #          - test
+      #          - master
+      #    #context: (inherited)
 
       - promote-to-development:
-          requires:
-            - build-and-promote
+          #requires:
+          #  - build-and-promote
           filters:
             branches:
               only: development
           context: promote-development.context
 
       - promote-to-test:
-          requires:
-            - build-and-promote
+          #requires:
+          #  - build-and-promote
           filters:
             branches:
               only: test
@@ -137,8 +156,8 @@ workflows:
 
       - hold-for-approval:
           type: approval
-          requires:
-            - build-and-promote
+          #requires:
+          #  - build-and-promote
           filters:
             branches:
               only: master
