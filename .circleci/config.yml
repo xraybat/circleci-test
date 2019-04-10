@@ -39,7 +39,7 @@ jobs:
       - run: 
           name: set environment variables
           command: |
-            echo 'export BUILD_STAGE=build' >> $BASH_ENV
+            echo 'export BUILD_STAGE=build-and-promote' >> $BASH_ENV
 
       - slack/notify:
           message: $BUILD_STAGE on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), build in circle-ci then promote to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
