@@ -24,7 +24,7 @@ jobs:
             echo 'export BUILD_STAGE=build-only' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE, build only in circle-ci
+          message: $BUILD_STAGE on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), build only in circle-ci
 
       - slack/status
 
@@ -58,7 +58,7 @@ jobs:
             echo 'export BUILD_STAGE=promote-to-development' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), $PROD_VAR in environment $APP_ENVIRON with app suffix '$APP_SUFFIX'
+          message: $BUILD_STAGE, $DEV_VAR in environment $APP_ENVIRON with app suffix '$APP_SUFFIX'
 
       - slack/status
 
@@ -74,7 +74,7 @@ jobs:
             echo 'export BUILD_STAGE=promote-to-test' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE, $PROD_VAR in environment $APP_ENVIRON with app suffix '$APP_SUFFIX'
+          message: $BUILD_STAGE, $TEST_VAR in environment $APP_ENVIRON with app suffix '$APP_SUFFIX'
 
       - slack/status
 
