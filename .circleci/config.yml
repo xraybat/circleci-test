@@ -37,44 +37,6 @@ jobs:
 
       - slack/status
 
-  # promote step
-  promote-to-development:
-    docker:
-      - image: xraybat/mvn-plus-npm
-
-    working_directory: ~/repo
-
-    steps:
-       - checkout
-
-       - run:
-          name: set environment variables
-          command: |
-            echo 'export BUILD_STAGE=promote-to-development' >> $BASH_ENV
-
-      - slack/notify:
-          message: $BUILD_STAGE, var is $DEV_VAR
-
-      - slack/notify:
-          message: $BUILD_STAGE, promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
-
-      # run integration tests
-      ##- run: newman run .circleci/it.pc.json --global-var salesforce-host=https://$ANYPOINT_APP_NAME$ANYPOINT_APP_SUFFIX.au-s1.cloudhub.io --global-var salesforce-auth=$API_BASIC_AUTH
-
-      # for update; do this every time once app has been created
-      # get the zip file name from where?...
-      #- run: echo 'export SOURCE_FILENAME=$( eval anypoint-cli --username=$ANYPOINT_UID --password=$ANYPOINT_PWD --environment=$ANYPOINT_ENVIRONMENT runtime-mgr cloudhub-application describe $ANYPOINT_APP_NAME$ANYPOINT_APP_SUFFIX -f "File\ name" | cut -f 2)' >> $BASH_ENV
-
-      # promote the app
-      #   by copying s3 repo zip file to local repo...
-      #- run: aws s3 cp s3://oau-cd$ANYPOINT_APP_SUFFIX/$ANYPOINT_ENVIRONMENT/$SOURCE_FILENAME ~/repo
-      #   ...modifying cloudhub app from local repo...
-      #- run: anypoint-cli --username=$ANYPOINT_UID --password=$ANYPOINT_PWD --environment=$ANYPOINT_TEST_ENVIRONMENT runtime-mgr cloudhub-application modify $ANYPOINT_APP_NAME$ANYPOINT_TEST_APP_SUFFIX ~/repo/$SOURCE_FILENAME
-      #   ...promoting the zip file from s3 repo to s3 repo
-      #- run: aws s3 cp s3://oau-cd$ANYPOINT_APP_SUFFIX/$ANYPOINT_ENVIRONMENT/$SOURCE_FILENAME s3://oau-cd$ANYPOINT_TEST_APP_SUFFIX/$ANYPOINT_TEST_ENVIRONMENT/  
-
-      - slack/status
-
 # only way to apply context
 workflows:
   build-with-optional-promote:
@@ -87,14 +49,6 @@ workflows:
                 - test
                 - master
           context: build-only.context
-
-      - promote-to-development:
-          requires:
-            - build-only
-          filters:
-            branches:
-              only: development
-          context: promote-development.context
 
       #- promote-to-test:
       #
