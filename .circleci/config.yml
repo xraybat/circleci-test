@@ -78,38 +78,6 @@ jobs:
 
       - slack/status
 
-  # promote step
-  promote-to-test:
-    docker:
-      - image: xraybat/mvn-plus-npm
-
-    steps:
-      - run:
-          name: set environment variables
-          command: |
-            echo 'export BUILD_STAGE=promote-to-test' >> $BASH_ENV
-
-      - slack/notify:
-          message: $BUILD_STAGE, (nothing doing here...)
-
-      - slack/status
-
-  # promote step
-  promote-to-production:
-    docker:
-      - image: xraybat/mvn-plus-npm
-
-    steps:
-      - run:
-          name: set environment variables
-          command: |
-            echo 'export BUILD_STAGE=promote-to-production' >> $BASH_ENV
-
-      - slack/notify:
-          message: $BUILD_STAGE, (nothing doing here...)
-
-      - slack/status
-
 # workflow; only way to apply context
 workflows:
   build-with-optional-promote:
