@@ -40,25 +40,25 @@ jobs:
 
       - slack/status
 
-  # promote step
-  promote-to-development:
-    docker:
-      - image: xraybat/mvn-plus-npm
-
-    working_directory: ~/repo
-
-    steps:
-       - checkout
-
-       - run:
-          name: set environment variables
-          command: echo 'export BUILD_STAGE=promote-to-development' >> $BASH_ENV
-
-      - slack/notify:
-          message: $BUILD_STAGE, var is $DEV_VAR
-
-      - slack/notify:
-          message: $BUILD_STAGE, promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
+  ## promote step
+  #promote-to-development:
+  #  docker:
+  #    - image: xraybat/mvn-plus-npm
+  #
+  #  working_directory: ~/repo
+  #
+  #  steps:
+  #     - checkout
+  #
+  #     - run:
+  #        name: set environment variables
+  #        command: echo 'export BUILD_STAGE=promote-to-development' >> $BASH_ENV
+  #
+  #    - slack/notify:
+  #        message: $BUILD_STAGE, var is $DEV_VAR
+  #
+  #    - slack/notify:
+  #        message: $BUILD_STAGE, promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
 
       # run integration tests
       ##- run: newman run .circleci/it.pc.json --global-var salesforce-host=https://$APP_NAME$APP_SUFFIX.au-s1.cloudhub.io --global-var salesforce-auth=$API_BASIC_AUTH
@@ -90,13 +90,13 @@ workflows:
                 - master
           context: build-only.context
 
-      - promote-to-development:
-          requires:
-            - build-only
-          filters:
-            branches:
-              only: development
-          context: promote-development.context
+      #- promote-to-development:
+      #    requires:
+      #      - build-only
+      #    filters:
+      #      branches:
+      #        only: development
+      #    context: promote-development.context
 
       #- promote-to-test:
       #
