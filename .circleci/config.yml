@@ -14,7 +14,7 @@ jobs:
   # build step
   build-only:
     docker:
-      - image: oxfamaus/mvn-plus-npm
+      - image: xraybat/mvn-plus-npm
 
     working_directory: ~/repo
 
@@ -43,7 +43,7 @@ jobs:
   # promote step
   promote-to-development:
     docker:
-      - image: oxfamaus/mvn-plus-npm
+      - image: xraybat/mvn-plus-npm
 
     working_directory: ~/repo
 
@@ -81,7 +81,7 @@ jobs:
   # promote step
   promote-to-test:
     docker:
-      - image: oxfamaus/mvn-plus-npm
+      - image: xraybat/mvn-plus-npm
 
     steps:
       - run:
@@ -97,7 +97,7 @@ jobs:
   # promote step
   promote-to-production:
     docker:
-      - image: oxfamaus/mvn-plus-npm
+      - image: xraybat/mvn-plus-npm
 
     steps:
       - run:
