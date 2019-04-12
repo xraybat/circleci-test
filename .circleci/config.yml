@@ -24,6 +24,9 @@ jobs:
           command: echo 'export BUILD_STAGE=build-only' >> $BASH_ENV
 
       - slack/notify:
+          message: $BUILD_STAGE, var is $BUILD_VAR
+
+      - slack/notify:
           message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), building locally for environment $APP_ENVIRON (suffix '$APP_SUFFIX')
 
       # build and run tests
@@ -49,8 +52,7 @@ jobs:
 
        - run:
           name: set environment variables
-          command: |
-            echo 'export BUILD_STAGE=promote-to-development' >> $BASH_ENV
+          command: echo 'export BUILD_STAGE=promote-to-development' >> $BASH_ENV
 
       - slack/notify:
           message: $BUILD_STAGE, var is $DEV_VAR
