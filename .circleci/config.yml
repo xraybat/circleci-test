@@ -7,6 +7,7 @@ version: 2.1
 # orbs
 orbs:
   slack: circleci/slack@2.0.0
+  heroku: circleci/heroku@1.0.0
 
 # jobs
 jobs:
@@ -14,6 +15,8 @@ jobs:
   build-only:
     docker:
       - image: oxfamaus/mvn-plus-npm
+
+    working_directory: ~/repo
 
     steps:
       - checkout
@@ -26,24 +29,14 @@ jobs:
       - slack/notify:
           message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), building locally for environment $APP_ENVIRON (suffix '$APP_SUFFIX')
 
-      - slack/status
-
-  # build step
-  build-and-promote:
-    docker:
-      - image: oxfamaus/mvn-plus-npm
-
-    steps:
-      - checkout
+      # build and run tests
+      - run:
+          name: build binary artefact
+          command: zip build-1.0.$CIRCLE_BUILD_NUM.zip a-source-file.xml
 
       - run: 
-          name: set environment variables
-          command: |
-            echo 'export BUILD_STAGE=build-and-promote' >> $BASH_ENV
-
-      - slack/notify:
-          message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), building then promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
-            # doesn't work, doesn't get context env vars from promote steps
+          name: copy build artefact to binary repo
+          coomand: aws s3 cp build-1.0.$CIRCLE_BUILD_NUM.zip s3://circle-ci$ANYPOINT_APP_SUFFIX/$APP_ENVIRON/  
 
       - slack/status
 
@@ -52,8 +45,12 @@ jobs:
     docker:
       - image: oxfamaus/mvn-plus-npm
 
+    working_directory: ~/repo
+
     steps:
-      - run:
+       - checkout
+
+       - run:
           name: set environment variables
           command: |
             echo 'export BUILD_STAGE=promote-to-development' >> $BASH_ENV
@@ -62,10 +59,22 @@ jobs:
           message: $BUILD_STAGE, var is $DEV_VAR
 
       - slack/notify:
-          message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM) for $APP_ENVIRON (suffix '$APP_SUFFIX')
-
-      - slack/notify:
           message: $BUILD_STAGE, promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
+
+      # run integration tests
+      ##- run: newman run .circleci/it.pc.json --global-var salesforce-host=https://$ANYPOINT_APP_NAME$ANYPOINT_APP_SUFFIX.au-s1.cloudhub.io --global-var salesforce-auth=$API_BASIC_AUTH
+
+      # for update; do this every time once app has been created
+      # get the zip file name from where?...
+      #- run: echo 'export SOURCE_FILENAME=$( eval anypoint-cli --username=$ANYPOINT_UID --password=$ANYPOINT_PWD --environment=$ANYPOINT_ENVIRONMENT runtime-mgr cloudhub-application describe $ANYPOINT_APP_NAME$ANYPOINT_APP_SUFFIX -f "File\ name" | cut -f 2)' >> $BASH_ENV
+
+      # promote the app
+      #   by copying s3 repo zip file to local repo...
+      #- run: aws s3 cp s3://oau-cd$ANYPOINT_APP_SUFFIX/$ANYPOINT_ENVIRONMENT/$SOURCE_FILENAME ~/repo
+      #   ...modifying cloudhub app from local repo...
+      #- run: anypoint-cli --username=$ANYPOINT_UID --password=$ANYPOINT_PWD --environment=$ANYPOINT_TEST_ENVIRONMENT runtime-mgr cloudhub-application modify $ANYPOINT_APP_NAME$ANYPOINT_TEST_APP_SUFFIX ~/repo/$SOURCE_FILENAME
+      #   ...promoting the zip file from s3 repo to s3 repo
+      #- run: aws s3 cp s3://oau-cd$ANYPOINT_APP_SUFFIX/$ANYPOINT_ENVIRONMENT/$SOURCE_FILENAME s3://oau-cd$ANYPOINT_TEST_APP_SUFFIX/$ANYPOINT_TEST_ENVIRONMENT/  
 
       - slack/status
 
@@ -81,13 +90,7 @@ jobs:
             echo 'export BUILD_STAGE=promote-to-test' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE, var is $TEST_VAR
-
-      - slack/notify:
-          message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM) for $APP_ENVIRON (suffix '$APP_SUFFIX')
-
-      - slack/notify:
-          message: $BUILD_STAGE, promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
+          message: $BUILD_STAGE, (nothing doing here...)
 
       - slack/status
 
@@ -103,13 +106,7 @@ jobs:
             echo 'export BUILD_STAGE=promote-to-production' >> $BASH_ENV
 
       - slack/notify:
-          message: $BUILD_STAGE, var is $PROD_VAR
-
-      - slack/notify:
-          message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM) for $APP_ENVIRON (suffix '$APP_SUFFIX')
-
-      - slack/notify:
-          message: $BUILD_STAGE, promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
+          message: $BUILD_STAGE, (nothing doing here...)
 
       - slack/status
 
@@ -120,52 +117,30 @@ workflows:
       - build-only:
           filters:
             branches:
-              #only: ^(?!development|test|master)([a-z0-9]+)$
-              #ignore: ^(?=development|test|master)([a-z0-9]+)$
               ignore:
                 - development
                 - test
                 - master
           context: build-only.context
 
-      #- build-and-promote:
-      #    filters:
-      #      branches:
-      #        #only: ^(?=development|test|master)([a-z0-9]+)$
-      #        only:
-      #          - development
-      #          - test
-      #          - master
-      #    #context: (inherited)
-
       - promote-to-development:
-          #requires:
-          #  - build-and-promote
+          requires:
+            - build-only
           filters:
             branches:
               only: development
           context: promote-development.context
 
-      - promote-to-test:
-          #requires:
-          #  - build-and-promote
-          filters:
-            branches:
-              only: test
-          context: promote-test.context
-
-      - hold-for-approval:
-          type: approval
-          #requires:
-          #  - build-and-promote
-          filters:
-            branches:
-              only: master
-
-      - promote-to-production:
-          requires:
-            - hold-for-approval
-          filters:
-            branches:
-              only: master
-          context: promote-production.context
+      #- promote-to-test:
+      #
+      #- hold-for-approval:
+      #    type: approval
+      #    requires:
+      #      - build-only
+      #    filters:
+      #      branches:
+      #        only: master
+      #
+      #- promote-to-production:
+      #    requires:
+      #      - hold-for-approval
