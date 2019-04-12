@@ -4,12 +4,10 @@
 #
 version: 2.1
 
-# orbs
 orbs:
   slack: circleci/slack@2.0.0
   heroku: circleci/heroku@1.0.0
 
-# jobs
 jobs:
   # build step
   build-only:
@@ -23,8 +21,7 @@ jobs:
 
       - run: 
           name: set environment variables
-          command: |
-            echo 'export BUILD_STAGE=build-only' >> $BASH_ENV
+          command: echo 'export BUILD_STAGE=build-only' >> $BASH_ENV
 
       - slack/notify:
           message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), building locally for environment $APP_ENVIRON (suffix '$APP_SUFFIX')
@@ -78,7 +75,7 @@ jobs:
 
       - slack/status
 
-# workflow; only way to apply context
+# only way to apply context
 workflows:
   build-with-optional-promote:
     jobs:
