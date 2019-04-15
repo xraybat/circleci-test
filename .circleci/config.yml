@@ -4,168 +4,129 @@
 #
 version: 2.1
 
-# orbs
 orbs:
   slack: circleci/slack@2.0.0
+  heroku: circleci/heroku@0.0.6
 
-# jobs
+executors:
+  my-executor:
+    docker:
+      - image: xraybat/mvn-plus-npm
+    working_directory: ~/repo
+
 jobs:
   # build step
   build-only:
-    docker:
-      - image: oxfamaus/mvn-plus-npm
+    executor: my-executor
 
     steps:
       - checkout
 
       - run: 
           name: set environment variables
-          command: |
-            echo 'export BUILD_STAGE=build-only' >> $BASH_ENV
-
+          command: echo 'export BUILD_STAGE=build-only' >> $BASH_ENV
       - slack/notify:
           message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), building locally for environment $APP_ENVIRON (suffix '$APP_SUFFIX')
+      - slack/notify:
+          message: $BUILD_STAGE, var is $BUILD_VAR
 
-      - slack/status
+      # build and run tests
+      - run:
+          name: set binary artefact file name
+          command: echo 'export BINARY_ARTEFACT_NAME=build-1.0.$CIRCLE_BUILD_NUM.zip' >> $BASH_ENV
 
-  # build step
-  build-and-promote:
-    docker:
-      - image: oxfamaus/mvn-plus-npm
-
-    steps:
-      - checkout
+      - run:
+          name: build binary artefact
+          command: zip $BINARY_ARTEFACT_NAME a-source-file.xml
 
       - run: 
-          name: set environment variables
-          command: |
-            echo 'export BUILD_STAGE=build-and-promote' >> $BASH_ENV
+          name: copy build artefact to binary repo
+          command: aws s3 cp $BINARY_ARTEFACT_NAME s3://circle-ci$APP_SUFFIX/$APP_ENVIRON/  
 
-      - slack/notify:
-          message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM), building then promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
-            # doesn't work, doesn't get context env vars from promote steps
+      - run:
+          name: set shared workspace up
+          command: |
+            mkdir -p workspace/target
+            cp $BINARY_ARTEFACT_NAME workspace/target/
+
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - target
 
       - slack/status
 
   # promote step
   promote-to-development:
-    docker:
-      - image: oxfamaus/mvn-plus-npm
+    executor: my-executor
 
     steps:
+      - checkout
+  
       - run:
           name: set environment variables
-          command: |
-            echo 'export BUILD_STAGE=promote-to-development' >> $BASH_ENV
-
+          command: echo 'export BUILD_STAGE=promote-to-development' >> $BASH_ENV
+      - slack/notify:
+          message: $BUILD_STAGE, promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
       - slack/notify:
           message: $BUILD_STAGE, var is $DEV_VAR
+  
+      - attach_workspace:
+          at: workspace
 
-      - slack/notify:
-          message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM) for $APP_ENVIRON (suffix '$APP_SUFFIX')
-
-      - slack/notify:
-          message: $BUILD_STAGE, promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
-
-      - slack/status
-
-  # promote step
-  promote-to-test:
-    docker:
-      - image: oxfamaus/mvn-plus-npm
-
-    steps:
       - run:
-          name: set environment variables
+          name: test shared workspace
           command: |
-            echo 'export BUILD_STAGE=promote-to-test' >> $BASH_ENV
+            ls workspace/target/
 
-      - slack/notify:
-          message: $BUILD_STAGE, var is $TEST_VAR
+      # run integration tests
+      ##- run: newman run .circleci/it.pc.json --global-var salesforce-host=https://$APP_NAME$APP_SUFFIX.au-s1.cloudhub.io --global-var salesforce-auth=$API_BASIC_AUTH
 
-      - slack/notify:
-          message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM) for $APP_ENVIRON (suffix '$APP_SUFFIX')
+      # for update; do this every time once app has been created
+      # get the zip file name from where?...
+      #- run: echo 'export SOURCE_FILENAME=$( eval anypoint-cli --username=$ANYPOINT_UID --password=$ANYPOINT_PWD --environment=$APP_ENVIRON runtime-mgr cloudhub-application describe $APP_NAME$APP_SUFFIX -f "File\ name" | cut -f 2)' >> $BASH_ENV
 
-      - slack/notify:
-          message: $BUILD_STAGE, promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
+      # promote the app
+      #   by copying s3 repo zip file to local repo...
+      #- run: aws s3 cp s3://oau-cd$APP_SUFFIX/$APP_ENVIRON/$SOURCE_FILENAME ~/repo
+      #   ...modifying cloudhub app from local repo...
+      #- run: anypoint-cli --username=$ANYPOINT_UID --password=$ANYPOINT_PWD --environment=$APP_TEST_ENVIRON runtime-mgr cloudhub-application modify $APP_NAME$APP_TEST_SUFFIX ~/repo/$SOURCE_FILENAME
+      #   ...promoting the zip file from s3 repo to s3 repo
+      #- run: aws s3 cp s3://oau-cd$APP_SUFFIX/$APP_ENVIRON/$SOURCE_FILENAME s3://oau-cd$APP_TEST_APP_SUFFIX/$APP_TEST_ENVIRON/  
 
       - slack/status
 
-  # promote step
-  promote-to-production:
-    docker:
-      - image: oxfamaus/mvn-plus-npm
-
-    steps:
-      - run:
-          name: set environment variables
-          command: |
-            echo 'export BUILD_STAGE=promote-to-production' >> $BASH_ENV
-
-      - slack/notify:
-          message: $BUILD_STAGE, var is $PROD_VAR
-
-      - slack/notify:
-          message: $BUILD_STAGE, building on $CIRCLE_BRANCH($CIRCLE_BUILD_NUM) for $APP_ENVIRON (suffix '$APP_SUFFIX')
-
-      - slack/notify:
-          message: $BUILD_STAGE, promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
-
-      - slack/status
-
-# workflow; only way to apply context
+# only way to apply context
 workflows:
   build-with-optional-promote:
     jobs:
       - build-only:
           filters:
             branches:
-              #only: ^(?!development|test|master)([a-z0-9]+)$
-              #ignore: ^(?=development|test|master)([a-z0-9]+)$
               ignore:
                 - development
                 - test
                 - master
           context: build-only.context
 
-      #- build-and-promote:
-      #    filters:
-      #      branches:
-      #        #only: ^(?=development|test|master)([a-z0-9]+)$
-      #        only:
-      #          - development
-      #          - test
-      #          - master
-      #    #context: (inherited)
-
       - promote-to-development:
-          #requires:
-          #  - build-and-promote
+          requires:
+            - build-only
           filters:
             branches:
               only: development
           context: promote-development.context
 
-      - promote-to-test:
-          #requires:
-          #  - build-and-promote
-          filters:
-            branches:
-              only: test
-          context: promote-test.context
-
-      - hold-for-approval:
-          type: approval
-          #requires:
-          #  - build-and-promote
-          filters:
-            branches:
-              only: master
-
-      - promote-to-production:
-          requires:
-            - hold-for-approval
-          filters:
-            branches:
-              only: master
-          context: promote-production.context
+      #- promote-to-test:
+      #
+      #- hold-for-approval:
+      #    type: approval
+      #    requires:
+      #      - build-only
+      #    filters:
+      #      branches:
+      #        only: master
+      #
+      #- promote-to-production:
+      #    requires:
+      #      - hold-for-approval
