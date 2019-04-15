@@ -31,12 +31,16 @@ jobs:
 
       # build and run tests
       - run:
+          name: set binary artefact file name
+          command: echo 'export BINARY_ARTEFACT_NAME=build-1.0.$CIRCLE_BUILD_NUM.zip' >> $BASH_ENV
+
+      - run:
           name: build binary artefact
-          command: zip build-1.0.$CIRCLE_BUILD_NUM.zip a-source-file.xml
+          command: zip $BINARY_ARTEFACT_NAME a-source-file.xml
 
       - run: 
           name: copy build artefact to binary repo
-          command: aws s3 cp build-1.0.$CIRCLE_BUILD_NUM.zip s3://circle-ci$APP_SUFFIX/$APP_ENVIRON/  
+          command: aws s3 cp $BINARY_ARTEFACT_NAME s3://circle-ci$APP_SUFFIX/$APP_ENVIRON/  
 
       - slack/status
 
