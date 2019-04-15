@@ -46,7 +46,7 @@ jobs:
       - run:
           name: set shared workspace up
           command: |
-            mkdir -p workspace/zip
+            mkdir -p workspace/target
             cp $BINARY_ARTEFACT_NAME workspace/target/
 
       - persist_to_workspace:
