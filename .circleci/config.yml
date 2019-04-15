@@ -43,13 +43,14 @@ jobs:
           command: aws s3 cp $BINARY_ARTEFACT_NAME s3://circle-ci$APP_SUFFIX/$APP_ENVIRON/  
 
       - run:
-          name: set workspace up
+          name: set shared workspace up
           command: |
-            mkdir workspace
+            mkdir -p workspace
             cp $BINARY_ARTEFACT_NAME workspace/
 
       - persist_to_workspace:
           root: workspace
+          paths: $BINARY_ARTEFACT_NAME
 
       - slack/status
 
