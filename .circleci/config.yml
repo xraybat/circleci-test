@@ -42,6 +42,10 @@ jobs:
           name: copy build artefact to binary repo
           command: aws s3 cp $BINARY_ARTEFACT_NAME s3://circle-ci$APP_SUFFIX/$APP_ENVIRON/  
 
+      - persist_to_workspace:
+          root: workspace
+          paths: $BINARY_ARTEFACT_NAME
+
       - slack/status
 
   # promote step
@@ -63,6 +67,14 @@ jobs:
   
       - slack/notify:
           message: $BUILD_STAGE, promoting to environment $APP_ENVIRON (suffix '$APP_SUFFIX')
+
+      - attach_workspace:
+          at: /tmp/workspace
+
+      - run:
+          name: test shared workspace
+          command: |
+            ls /tmp/workspace
 
       # run integration tests
       ##- run: newman run .circleci/it.pc.json --global-var salesforce-host=https://$APP_NAME$APP_SUFFIX.au-s1.cloudhub.io --global-var salesforce-auth=$API_BASIC_AUTH
