@@ -110,8 +110,8 @@ workflows:
           context: build-only.context
 
       - promote-to-development:
-          requires:
-            - build-only
+          #requires:
+          #  - build-only
           filters:
             branches:
               only: development
