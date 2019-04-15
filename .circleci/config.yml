@@ -46,13 +46,13 @@ jobs:
       - run:
           name: set shared workspace up
           command: |
-            mkdir -p workspace
-            cp $BINARY_ARTEFACT_NAME workspace/
+            mkdir -p workspace/zip
+            cp $BINARY_ARTEFACT_NAME workspace/target/
 
       - persist_to_workspace:
           root: workspace
           paths:
-            - $BINARY_ARTEFACT_NAME
+            - target
 
       - slack/status
 
@@ -77,7 +77,7 @@ jobs:
       - run:
           name: test shared workspace
           command: |
-            ls workspace
+            ls workspace/target/
 
       # run integration tests
       ##- run: newman run .circleci/it.pc.json --global-var salesforce-host=https://$APP_NAME$APP_SUFFIX.au-s1.cloudhub.io --global-var salesforce-auth=$API_BASIC_AUTH
