@@ -51,8 +51,7 @@ jobs:
 
       - persist_to_workspace:
           root: workspace
-          paths:
-            - target
+          paths: target/
 
       - slack/status
 
@@ -101,17 +100,17 @@ workflows:
   build-with-optional-promote:
     jobs:
       - build-only:
-          filters:
-            branches:
-              ignore:
-                - development
-                - test
-                - master
+          #filters:
+          #  branches:
+          #    ignore:
+          #      - development
+          #      - test
+          #      - master
           context: build-only.context
 
       - promote-to-development:
-          #requires:
-          #  - build-only
+          requires:
+            - build-only
           filters:
             branches:
               only: development
