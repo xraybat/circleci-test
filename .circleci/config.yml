@@ -76,14 +76,8 @@ jobs:
       - run:
           name: test shared workspace
           command: |
-            ls workspace/target/
             echo 'export BINARY_ARTEFACT_FULL_NAME=$(ls workspace/target/*)' >> $BASH_ENV
             echo 'export BINARY_ARTEFACT_NAME=$(basename $BINARY_ARTEFACT_FULL_NAME)' >> $BASH_ENV
-      - slack/notify:
-          message: $BUILD_STAGE, BINARY_ARTEFACT_NAME is base, $BINARY_ARTEFACT_NAME, full, $BINARY_ARTEFACT_FULL_NAME
-
-      # run integration tests (w/out hold for approval delay?? in hold-for-approval test amd prod??)
-      ##- run: newman run .circleci/it.pc.json --global-var salesforce-host=https://$APP_NAME$APP_SUFFIX.au-s1.cloudhub.io --global-var salesforce-auth=$API_BASIC_AUTH
 
       - run: 
           name: copy build artefact to binary repo
@@ -98,6 +92,9 @@ jobs:
     steps:
       - checkout
   
+      # run integration tests in dev (after necessary hold-for-approval)
+      ##- run: newman run .circleci/it.pc.json --global-var salesforce-host=https://$APP_NAME$APP_SUFFIX.au-s1.cloudhub.io --global-var salesforce-auth=$API_BASIC_AUTH
+
       - run:
           name: set environment variables
           command: echo 'export BUILD_STAGE=promote-to-test' >> $BASH_ENV
@@ -112,20 +109,22 @@ jobs:
       - run:
           name: test shared workspace
           command: |
-            ls workspace/target/
             echo 'export BINARY_ARTEFACT_FULL_NAME=$(ls workspace/target/*)' >> $BASH_ENV
             echo 'export BINARY_ARTEFACT_NAME=$(basename $BINARY_ARTEFACT_FULL_NAME)' >> $BASH_ENV
-      - slack/notify:
-          message: $BUILD_STAGE, BINARY_ARTEFACT_NAME is base, $BINARY_ARTEFACT_NAME, full, $BINARY_ARTEFACT_FULL_NAME
-
-      # run integration tests (w/out hold for approval delay?? in hold-for-approval test amd prod??)
-      ##- run: newman run .circleci/it.pc.json --global-var salesforce-host=https://$APP_NAME$APP_SUFFIX.au-s1.cloudhub.io --global-var salesforce-auth=$API_BASIC_AUTH
 
       - run: 
           name: copy build artefact to binary repo
           command: aws s3 cp $BINARY_ARTEFACT_FULL_NAME s3://$BUCKET_NAME$APP_SUFFIX/$APP_ENVIRON/  
 
       - slack/status
+
+  # promote step
+  # stub only
+  promote-to-production:
+    executor: my-executor
+
+    steps:
+      - checkout
 
 # only way to apply context
 workflows:
@@ -145,7 +144,7 @@ workflows:
                 - master
           context: promote-development.context
 
-      - hold-for-approval:
+      - hold-for-approval-test:
           type: approval
           requires:
             - promote-to-development
@@ -157,7 +156,7 @@ workflows:
 
       - promote-to-test:
           requires:
-            - hold-for-approval
+            - hold-for-approval-test
           filters:
             branches:
               only:
@@ -165,9 +164,21 @@ workflows:
                 - master
           context: promote-test.context
 
-      #- promote-to-test:
-      #
-      #
-      #- promote-to-production:
-      #    requires:
-      #      - hold-for-approval
+      - hold-for-approval-production:
+          type: approval
+          requires:
+            - promote-to-test
+          filters:
+            branches:
+              only:
+                - master
+
+      - promote-to-production:
+          requires:
+            - hold-for-approval-production
+          filters:
+            branches:
+              only:
+                - master
+          context: promote-production.context
+
