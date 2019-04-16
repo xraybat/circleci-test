@@ -139,7 +139,10 @@ workflows:
             - build-only
           filters:
             branches:
-              only: development
+              only:
+                - development
+                - test
+                - master
           context: promote-development.context
 
       - hold-for-approval:
@@ -148,14 +151,18 @@ workflows:
             - promote-to-development
           filters:
             branches:
-              only: test
+              only:
+                - test
+                - master
 
       - promote-to-test:
           requires:
             - hold-for-approval
           filters:
             branches:
-              only: test
+              only:
+                - test
+                - master
           context: promote-test.context
 
       #- promote-to-test:
