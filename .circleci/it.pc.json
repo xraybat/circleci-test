@@ -1,0 +1,50 @@
+{
+	"info": {
+		"_postman_id": "fb64a816-2ac8-4583-8897-93c687c94985",
+		"name": "ci-test-integration",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "echo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "8e4fbff0-2b4a-4931-b0aa-cc54941540fe",
+						"exec": [
+							"pm.test(\"echo\", function() {",
+							"    pm.response.to.have.status(200)",
+							"    && pm.expect(pm.response.json().message).to.includes(\"echo\")",
+							"    && pm.expect(pm.response.json().message).to.includes(\"successful\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://5e60aab2-e39b-4941-a256-dccc1a1ee5cd.mock.pstmn.io/ci-test-integration",
+					"protocol": "https",
+					"host": [
+						"5e60aab2-e39b-4941-a256-dccc1a1ee5cd",
+						"mock",
+						"pstmn",
+						"io"
+					],
+					"path": [
+						"ci-test-integration"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
