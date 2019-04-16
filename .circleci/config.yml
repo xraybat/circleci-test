@@ -41,7 +41,7 @@ jobs:
 
       - run: 
           name: copy build artefact to binary repo
-          command: aws s3 cp $BINARY_ARTEFACT_NAME s3://circle-ci$APP_SUFFIX/$APP_ENVIRON/  
+          command: aws s3 cp $BINARY_ARTEFACT_NAME s3://$BUCKET_NAME$APP_SUFFIX/$APP_ENVIRON/  
 
       - run:
           name: set shared workspace up
@@ -87,7 +87,7 @@ jobs:
 
       - run: 
           name: copy build artefact to binary repo
-          command: aws s3 cp $BINARY_ARTEFACT_FULL_NAME s3://circle-ci$APP_SUFFIX/$APP_ENVIRON/  
+          command: aws s3 cp $BINARY_ARTEFACT_FULL_NAME s3://$BUCKET_NAME$APP_SUFFIX/$APP_ENVIRON/  
 
       - slack/status
 
@@ -123,7 +123,7 @@ jobs:
 
       - run: 
           name: copy build artefact to binary repo
-          command: aws s3 cp $BINARY_ARTEFACT_FULL_NAME s3://circle-ci$APP_SUFFIX/$APP_ENVIRON/  
+          command: aws s3 cp $BINARY_ARTEFACT_FULL_NAME s3://$BUCKET_NAME$APP_SUFFIX/$APP_ENVIRON/  
 
       - slack/status
 
