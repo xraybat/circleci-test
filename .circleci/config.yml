@@ -43,7 +43,7 @@ jobs:
 
       - run: 
           name: copy build artefact to binary repo
-          command: aws s3 cp $BINARY_ARTEFACT_NAME s3://$BUCKET_NAME$APP_SUFFIX/$APP_ENVIRON/  
+          command: aws s3 cp target/$BINARY_ARTEFACT_NAME s3://$BUCKET_NAME$APP_SUFFIX/$APP_ENVIRON/  
 
       - run:
           name: set shared workspace up
