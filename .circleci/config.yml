@@ -95,7 +95,7 @@ jobs:
       - checkout
   
       # run integration tests in dev (after necessary hold-for-approval)
-      - run: newman run .circleci/it.pc.json --global-var url= --global-var environ=$APP_DEV_ENVIRON
+      #- run: newman run .circleci/it.pc.json --global-var url= --global-var environ=$APP_DEV_ENVIRON
 
       - run:
           name: set environment variables
