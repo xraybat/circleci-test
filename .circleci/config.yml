@@ -37,7 +37,9 @@ jobs:
 
       - run:
           name: build binary artefact
-          command: zip $BINARY_ARTEFACT_NAME a-source-file.xml
+          command: |
+            mkdir target
+            zip target/$BINARY_ARTEFACT_NAME a-source-file.xml
 
       - run: 
           name: copy build artefact to binary repo
@@ -47,7 +49,7 @@ jobs:
           name: set shared workspace up
           command: |
             mkdir -p workspace/target
-            cp $BINARY_ARTEFACT_NAME workspace/target/
+            cp target/$BINARY_ARTEFACT_NAME workspace/target/
 
       - persist_to_workspace:
           root: workspace
@@ -93,7 +95,7 @@ jobs:
       - checkout
   
       # run integration tests in dev (after necessary hold-for-approval)
-      - run: newman run .circleci/it.pc.json #--global-var host-env=https://$APP_DEV_NAME$APP_DEV
+      - run: newman run .circleci/it.pc.json --global-var url= --global-var environ=$APP_DEV_ENVIRON
 
       - run:
           name: set environment variables
