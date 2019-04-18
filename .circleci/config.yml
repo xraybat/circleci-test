@@ -42,7 +42,7 @@ jobs:
             zip target/$BINARY_ARTEFACT_NAME a-source-file.xml
 
       - run: 
-          name: copy build artefact to binary repo
+          name: (optional) copy build artefact to ("local") binary repo
           command: aws s3 cp target/$BINARY_ARTEFACT_NAME s3://$BUCKET_NAME$APP_SUFFIX/$APP_ENVIRON/  
 
       - run:
@@ -76,7 +76,7 @@ jobs:
           at: workspace
 
       - run:
-          name: test shared workspace
+          name: examine shared workspace
           command: |
             echo 'export BINARY_ARTEFACT_FULL_NAME=$(ls workspace/target/*)' >> $BASH_ENV
             echo 'export BINARY_ARTEFACT_NAME=$(basename $BINARY_ARTEFACT_FULL_NAME)' >> $BASH_ENV
